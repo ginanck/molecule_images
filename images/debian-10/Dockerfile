@@ -15,9 +15,9 @@ ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Install system dependencies and Python
-RUN apt-get update && apt-get install -y 
+RUN apt-get update && apt-get install -y \
     # Python and development tools
-    python3 python3-pip python3-dev python3-venv 
+    python3 python3-pip python3-dev python3-venv \
     # Core system packages
     systemd systemd-cron \
     sudo \

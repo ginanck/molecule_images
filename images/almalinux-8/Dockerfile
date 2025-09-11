@@ -33,7 +33,7 @@ RUN dnf -y update \
         # Certificate management
         ca-certificates \
         # Additional tools
-        rsync
+        rsync \
         epel-release \
     && dnf clean all \
     && rm -rf /var/cache/dnf
