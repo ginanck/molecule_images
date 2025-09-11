@@ -11,7 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Install system dependencies and Python
 RUN dnf -y update \
     && dnf -y install epel-release \
-    && dnf -y install \
+    && dnf -y install --allowerasing \
         # Python and development tools
         python3 python3-pip python3-devel \
         # Core system packages
