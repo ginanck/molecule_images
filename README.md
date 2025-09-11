@@ -6,25 +6,24 @@ A collection of Docker images optimized for Ansible Molecule testing and CI/CD p
 
 | OS | Version | Python | Docker Hub | Pull Command |
 |----|---------|--------|------------|--------------|
-| Ubuntu | 20.04 | 3.9 | `ghcr.io/your-username/molecule-ubuntu:20.04` | `docker pull ghcr.io/your-username/molecule-ubuntu:20.04` |
-| Ubuntu | 22.04 | 3.10 | `ghcr.io/your-username/molecule-ubuntu:22.04` | `docker pull ghcr.io/your-username/molecule-ubuntu:22.04` |
-| Ubuntu | 24.04 | 3.11 | `ghcr.io/your-username/molecule-ubuntu:24.04` | `docker pull ghcr.io/your-username/molecule-ubuntu:24.04` |
-| Debian | 10 | 3.9 | `ghcr.io/your-username/molecule-debian:10` | `docker pull ghcr.io/your-username/molecule-debian:10` |
-| Debian | 11 | 3.10 | `ghcr.io/your-username/molecule-debian:11` | `docker pull ghcr.io/your-username/molecule-debian:11` |
-| Debian | 12 | 3.11 | `ghcr.io/your-username/molecule-debian:12` | `docker pull ghcr.io/your-username/molecule-debian:12` |
-| AlmaLinux | 8 | 3.9 | `ghcr.io/your-username/molecule-almalinux:8` | `docker pull ghcr.io/your-username/molecule-almalinux:8` |
-| AlmaLinux | 9 | 3.9 | `ghcr.io/your-username/molecule-almalinux:9` | `docker pull ghcr.io/your-username/molecule-almalinux:9` |
-| Rocky Linux | 8 | 3.9 | `ghcr.io/your-username/molecule-rockylinux:8` | `docker pull ghcr.io/your-username/molecule-rockylinux:8` |
-| Rocky Linux | 9 | 3.9 | `ghcr.io/your-username/molecule-rockylinux:9` | `docker pull ghcr.io/your-username/molecule-rockylinux:9` |
+| Ubuntu | 20.04 | 3.8 | `ghcr.io/ginanck/molecule-ubuntu:20.04` | `docker pull ghcr.io/ginanck/molecule-ubuntu:20.04` |
+| Ubuntu | 22.04 | 3.10 | `ghcr.io/ginanck/molecule-ubuntu:22.04` | `docker pull ghcr.io/ginanck/molecule-ubuntu:22.04` |
+| Ubuntu | 24.04 | 3.12 | `ghcr.io/ginanck/molecule-ubuntu:24.04` | `docker pull ghcr.io/ginanck/molecule-ubuntu:24.04` |
+| Debian | 11 | 3.9 | `ghcr.io/ginanck/molecule-debian:11` | `docker pull ghcr.io/ginanck/molecule-debian:11` |
+| Debian | 12 | 3.11 | `ghcr.io/ginanck/molecule-debian:12` | `docker pull ghcr.io/ginanck/molecule-debian:12` |
+| AlmaLinux | 8 | 3.6 | `ghcr.io/ginanck/molecule-almalinux:8` | `docker pull ghcr.io/ginanck/molecule-almalinux:8` |
+| AlmaLinux | 9 | 3.9 | `ghcr.io/ginanck/molecule-almalinux:9` | `docker pull ghcr.io/ginanck/molecule-almalinux:9` |
+| Rocky Linux | 8 | 3.6 | `ghcr.io/ginanck/molecule-rockylinux:8` | `docker pull ghcr.io/ginanck/molecule-rockylinux:8` |
+| Rocky Linux | 9 | 3.9 | `ghcr.io/ginanck/molecule-rockylinux:9` | `docker pull ghcr.io/ginanck/molecule-rockylinux:9` |
 
 ## 🚀 Features
 
-- **Consistent Python Versions**: Each OS family uses optimized Python versions
+- **Native Python Versions**: Each distribution uses its native Python version for authentic testing
 - **Pre-installed Ansible Stack**: Ansible 8.x, Molecule 6.x, ansible-lint, yamllint
 - **systemd Support**: Full systemd support for service testing
 - **SSH Ready**: Pre-configured SSH server and client
 - **Multi-architecture**: Support for amd64 and arm64 platforms
-- **Optimized Builds**: Multi-stage builds with Python base images for smaller sizes
+- **Authentic Distributions**: Each image uses distribution-native packages and tools
 - **Regular Updates**: Automated builds and security updates
 
 ## 📦 What's Included

@@ -14,6 +14,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# Update sources.list to use archive repositories for Debian 10 (EOL)
+RUN sed -i 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' /etc/apt/sources.list \
+    && sed -i 's|http://security.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list \
+    && sed -i '/buster-updates/d' /etc/apt/sources.list
+
 # Install system dependencies and Python
 RUN apt-get update && apt-get install -y \
     # Python and development tools
