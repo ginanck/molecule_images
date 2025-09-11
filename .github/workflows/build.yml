@@ -29,6 +29,10 @@ env:
   # Change this to your GitHub username
   GITHUB_USERNAME: ${{ github.repository_owner }}
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     name: Build ${{ matrix.os }} ${{ matrix.version }}
