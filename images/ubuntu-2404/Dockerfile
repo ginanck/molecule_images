@@ -48,7 +48,7 @@ RUN apt-get update && apt-get install -y \
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
-# Copy requirements and install Python packages
+# Copy requirements and install Python packages (with --break-system-packages for PEP 668)
 COPY requirements.txt /tmp/requirements.txt
 RUN python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
