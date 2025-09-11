@@ -107,6 +107,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Copy requirements.txt to image directory
+        run: |
+          cp requirements.txt ./images/${{ matrix.image_name }}/
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
