@@ -34,8 +34,15 @@ RUN dnf -y update \
         ca-certificates \
         # Additional tools
         rsync \
+        # GPG tools for Docker repository
+        gnupg2 \
         # Clean up
         && dnf clean all
+
+# Install Docker
+RUN dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo \
+    && dnf -y install docker-ce-cli \
+    && dnf clean all
 
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
