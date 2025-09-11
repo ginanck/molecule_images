@@ -50,8 +50,8 @@ RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 # Copy requirements and install Python packages
 COPY requirements.txt /tmp/requirements.txt
-RUN python3 -m pip install --break-system-packages --no-cache-dir --upgrade pip setuptools wheel \
-    && python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/requirements.txt \
+RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
 
 # Configure systemd
