@@ -1,22 +1,19 @@
-FROM python:3.9-slim-bullseye as base
-
-# Use Rocky Linux 8 as the final base
 FROM rockylinux:8
 
 LABEL maintainer="Your Name <your.email@example.com>"
-LABEL description="Rocky Linux 8 image with Python 3.9 optimized for Ansible Molecule testing"
+LABEL description="Rocky Linux 8 image with Python 3.6 optimized for Ansible Molecule testing"
 LABEL org.opencontainers.image.source="https://github.com/your-username/docker-images"
 
 ENV container=docker
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Copy Python from the python base image
-COPY --from=base /usr/local /usr/local
-
-# Install system dependencies
+# Install system dependencies and Python
 RUN dnf -y update \
+    && dnf -y install epel-release \
     && dnf -y install \
+        # Python and development tools
+        python3 python3-pip python3-devel \
         # Core system packages
         systemd sudo \
         # Development tools and libraries needed for Python packages
@@ -36,16 +33,21 @@ RUN dnf -y update \
         # Certificate management
         ca-certificates \
         # Additional tools
-        rsync \
-        # EPEL repository for additional packages
+        rsync
         epel-release \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
+        # Clean up
+        && dnf clean all
+
+# Create symlink for python command
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
 # Copy requirements and install Python packages
 COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel \
-    && pip3 install --no-cache-dir -r /tmp/requirements.txt \
+RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
 
 # Configure systemd

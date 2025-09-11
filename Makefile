@@ -6,11 +6,11 @@ REGISTRY := ghcr.io
 GITHUB_USERNAME := ginanck
 REPO_NAME := $(shell basename `git rev-parse --show-toplevel`)
 
-# Image definitions with Python versions
-UBUNTU_IMAGES := ubuntu-2004:20.04:3.9 ubuntu-2204:22.04:3.10 ubuntu-2404:24.04:3.11
-DEBIAN_IMAGES := debian-10:10:3.9 debian-11:11:3.10 debian-12:12:3.11
-ALMALINUX_IMAGES := almalinux-8:8:3.9 almalinux-9:9:3.9
-ROCKYLINUX_IMAGES := rockylinux-8:8:3.9 rockylinux-9:9:3.9
+# Image definitions with native Python versions
+UBUNTU_IMAGES := ubuntu-2004:20.04:3.8 ubuntu-2204:22.04:3.10 ubuntu-2404:24.04:3.12
+DEBIAN_IMAGES := debian-10:10:3.7 debian-11:11:3.9 debian-12:12:3.11
+ALMALINUX_IMAGES := almalinux-8:8:3.6 almalinux-9:9:3.9
+ROCKYLINUX_IMAGES := rockylinux-8:8:3.6 rockylinux-9:9:3.9
 
 ALL_IMAGES := $(UBUNTU_IMAGES) $(DEBIAN_IMAGES) $(ALMALINUX_IMAGES) $(ROCKYLINUX_IMAGES)
 

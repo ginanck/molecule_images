@@ -1,10 +1,7 @@
-FROM python:3.10-slim-bullseye as base
-
-# Use Debian 11 as the final base
 FROM debian:11
 
 LABEL maintainer="Your Name <your.email@example.com>"
-LABEL description="Debian 11 (Bullseye) image with Python 3.10 optimized for Ansible Molecule testing"
+LABEL description="Debian 11 (Bullseye) image with Python 3.9 optimized for Ansible Molecule testing"
 LABEL org.opencontainers.image.source="https://github.com/your-username/docker-images"
 
 # Prevent interactive prompts during package installation
@@ -17,11 +14,10 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Copy Python from the python base image
-COPY --from=base /usr/local /usr/local
-
-# Install system dependencies
+# Install system dependencies and Python
 RUN apt-get update && apt-get install -y \
+    # Python and development tools
+    python3 python3-pip python3-dev python3-venv \
     # Core system packages
     systemd systemd-cron \
     sudo \
@@ -49,10 +45,13 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Create symlink for python command
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
 # Copy requirements and install Python packages
 COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel \
-    && pip3 install --no-cache-dir -r /tmp/requirements.txt \
+RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
 
 # Configure systemd

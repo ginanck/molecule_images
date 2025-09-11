@@ -37,12 +37,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Ubuntu variants with specific Python versions
+          # Ubuntu variants with native Python versions
           - os: ubuntu
             version: "20.04"
             image_name: ubuntu-2004
             platforms: linux/amd64,linux/arm64
-            python_version: "3.9"
+            python_version: "3.8"
           - os: ubuntu
             version: "22.04"
             image_name: ubuntu-2204
@@ -52,40 +52,40 @@ jobs:
             version: "24.04"
             image_name: ubuntu-2404
             platforms: linux/amd64,linux/arm64
-            python_version: "3.11"
-          # Debian variants with specific Python versions
+            python_version: "3.12"
+          # Debian variants with native Python versions
           - os: debian
             version: "10"
             image_name: debian-10
             platforms: linux/amd64,linux/arm64
-            python_version: "3.9"
+            python_version: "3.7"
           - os: debian
             version: "11"
             image_name: debian-11
             platforms: linux/amd64,linux/arm64
-            python_version: "3.10"
+            python_version: "3.9"
           - os: debian
             version: "12"
             image_name: debian-12
             platforms: linux/amd64,linux/arm64
             python_version: "3.11"
-          # AlmaLinux variants
+          # AlmaLinux variants with native Python versions
           - os: almalinux
             version: "8"
             image_name: almalinux-8
             platforms: linux/amd64,linux/arm64
-            python_version: "3.9"
+            python_version: "3.6"
           - os: almalinux
             version: "9"
             image_name: almalinux-9
             platforms: linux/amd64,linux/arm64
             python_version: "3.9"
-          # Rocky Linux variants
+          # Rocky Linux variants with native Python versions
           - os: rockylinux
             version: "8"
             image_name: rockylinux-8
             platforms: linux/amd64,linux/arm64
-            python_version: "3.9"
+            python_version: "3.6"
           - os: rockylinux
             version: "9"
             image_name: rockylinux-9
