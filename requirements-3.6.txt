@@ -1,0 +1,8 @@
+# Python 3.6 compatible requirements for Ansible Molecule testing
+# Note: Python 3.6 support is very limited, using last known working versions
+
+# Ansible stack - version pinned for consistency with Python 3.6 compatibility
+# Note: Using ansible-core instead of ansible to avoid conflicts
+ansible-core==2.11.12
+ansible-compat==1.0.0
+ansible-lint==4.3.7

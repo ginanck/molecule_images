@@ -1,7 +1,7 @@
-FROM almalinux:9
+FROM oraclelinux:9
 
 LABEL maintainer="Your Name <your.email@example.com>"
-LABEL description="AlmaLinux 9 image with Python 3.9 optimized for Ansible Molecule testing"
+LABEL description="Oracle Linux 9 image with Python 3.9 optimized for Ansible Molecule testing"
 LABEL org.opencontainers.image.source="https://github.com/your-username/docker-images"
 
 ENV container=docker

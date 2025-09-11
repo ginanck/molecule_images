@@ -1,0 +1,7 @@
+# Python 3.11 compatible requirements for Ansible Molecule testing
+
+# Ansible stack - version pinned for consistency with Python 3.11 compatibility
+ansible==8.5.0
+ansible-compat==24.6.1
+ansible-core==2.15.12
+ansible-lint==6.17.2

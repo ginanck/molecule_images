@@ -1,0 +1,7 @@
+# Python 3.7 compatible requirements for Ansible Molecule testing
+
+# Ansible stack - version pinned for consistency with Python 3.7 compatibility
+ansible==4.10.0
+ansible-compat==1.0.0
+ansible-core==2.11.12
+ansible-lint==5.4.0
