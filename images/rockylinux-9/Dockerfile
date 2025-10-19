@@ -8,8 +8,13 @@ ENV container=docker
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
+# Force use of specific reliable mirror to avoid mirror sync issues
+RUN sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://download.rockylinux.org/pub/rocky|g' /etc/yum.repos.d/rocky*.repo \
+    && sed -i 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/rocky*.repo
+
 # Install system dependencies and Python
-RUN dnf -y update \
+RUN dnf clean all \
+    && dnf -y update \
     && dnf -y install epel-release \
     && dnf -y install --allowerasing \
         # Python and development tools
@@ -39,19 +44,19 @@ RUN dnf -y update \
         # Clean up
         && dnf clean all
 
-# Install Docker
-RUN dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo \
-    && dnf -y install docker-ce-cli \
+# Install Docker with repository refresh and retry logic for reliability
+RUN dnf clean all \
+    && dnf makecache --refresh \
+    && dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo \
+    && (dnf -y install docker-ce-cli || (sleep 30 && dnf clean all && dnf -y install docker-ce-cli)) \
     && dnf clean all
 
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 # Copy requirements and install Python packages
-COPY requirements.txt /tmp/requirements.txt
-RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel \
-    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
-    && rm /tmp/requirements.txt
+COPY requirements.txt /tmp/
+RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Configure systemd
 RUN systemctl set-default multi-user.target \

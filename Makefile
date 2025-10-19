@@ -1,289 +1,283 @@
-# Makefile for Docker Images CI/CD
-# Usage: make build, make push, make test, etc.
+# Makefile for Molecule Docker Images
+# Simple and robust commands to build, test, and push Docker images for Ansible Molecule testing
 
 # Configuration
 REGISTRY := ghcr.io
 GITHUB_USERNAME := ginanck
-REPO_NAME := $(shell basename `git rev-parse --show-toplevel`)
 
-# Image definitions with native Python versions
-UBUNTU_IMAGES := ubuntu-2004:20.04:3.8 ubuntu-2204:22.04:3.10 ubuntu-2404:24.04:3.12
-DEBIAN_IMAGES := debian-11:11:3.9 debian-12:12:3.11
-ALMALINUX_IMAGES := almalinux-8:8:3.6 almalinux-9:9:3.9
-ROCKYLINUX_IMAGES := rockylinux-8:8:3.6 rockylinux-9:9:3.9
-
-ALL_IMAGES := $(UBUNTU_IMAGES) $(DEBIAN_IMAGES) $(ALMALINUX_IMAGES) $(ROCKYLINUX_IMAGES)
-
-# Default target
-.DEFAULT_GOAL := help
+# Image definitions: folder_name:version:python_version
+IMAGES := \
+	ubuntu-2004:20.04:3.8 \
+	ubuntu-2204:22.04:3.10 \
+	ubuntu-2404:24.04:3.12 \
+	debian-10:10:3.7 \
+	debian-11:11:3.9 \
+	debian-12:12:3.11 \
+	almalinux-8:8:3.6 \
+	almalinux-9:9:3.9 \
+	rockylinux-8:8:3.6 \
+	rockylinux-9:9:3.9 \
+	oraclelinux-8:8:3.6 \
+	oraclelinux-9:9:3.9
 
 # Colors for output
-BOLD := \033[1m
-RED := \033[0;31m
-GREEN := \033[0;32m
-YELLOW := \033[1;33m
 BLUE := \033[0;34m
-NC := \033[0m # No Color
+GREEN := \033[0;32m
+RED := \033[0;31m
+NC := \033[0m
 
-# Helper functions
-define build_image
-	$(eval IMAGE_SPEC := $(1))
-	$(eval IMAGE_NAME_FOLDER := $(word 1,$(subst :, ,$(IMAGE_SPEC))))
-	$(eval VERSION := $(word 2,$(subst :, ,$(IMAGE_SPEC))))
-	$(eval PYTHON_VERSION := $(word 3,$(subst :, ,$(IMAGE_SPEC))))
-	$(eval OS := $(word 1,$(subst -, ,$(IMAGE_NAME_FOLDER))))
-	$(eval IMAGE_NAME := $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$(OS):$(VERSION))
-	$(eval BUILD_CONTEXT := ./images/$(IMAGE_NAME_FOLDER))
-	
-	@echo "$(BLUE)Building $(IMAGE_NAME_FOLDER) ($(OS):$(VERSION)) with Python $(PYTHON_VERSION)$(NC)"
-	@if [ ! -f "$(BUILD_CONTEXT)/Dockerfile" ]; then \
-		echo "$(RED)Error: Dockerfile not found at $(BUILD_CONTEXT)/Dockerfile$(NC)"; \
+# Default goal
+.DEFAULT_GOAL := help
+
+# Prerequisites check
+.PHONY: check-prereqs
+check-prereqs:
+	@echo "$(BLUE)Checking prerequisites...$(NC)"
+	@which docker > /dev/null || (echo "$(RED)❌ Docker not found. Please install Docker 20.10+.$(NC)"; exit 1)
+	@docker --version | grep -q "20\." || (echo "$(RED)❌ Docker version 20.10+ required.$(NC)"; exit 1)
+	@which make > /dev/null || (echo "$(RED)❌ Make not found.$(NC)"; exit 1)
+	@test -f requirements-common.txt || (echo "$(RED)❌ requirements-common.txt not found.$(NC)"; exit 1) \
+	&& test -f requirements-3.6.txt || (echo "$(RED)❌ requirements-3.6.txt not found.$(NC)"; exit 1) \
+	&& test -f requirements-3.7.txt || (echo "$(RED)❌ requirements-3.7.txt not found.$(NC)"; exit 1) \
+	&& test -f requirements-3.8.txt || (echo "$(RED)❌ requirements-3.8.txt not found.$(NC)"; exit 1) \
+	&& test -f requirements-3.9.txt || (echo "$(RED)❌ requirements-3.9.txt not found.$(NC)"; exit 1) \
+	&& test -f requirements-3.10.txt || (echo "$(RED)❌ requirements-3.10.txt not found.$(NC)"; exit 1) \
+	&& test -f requirements-3.11.txt || (echo "$(RED)❌ requirements-3.11.txt not found.$(NC)"; exit 1) \
+	&& test -f requirements-3.12.txt || (echo "$(RED)❌ requirements-3.12.txt not found.$(NC)"; exit 1)
+	@echo "$(GREEN)✅ All prerequisites met!$(NC)"
+
+# Help - show available commands
+.PHONY: help
+help:
+	@echo "$(BLUE)Molecule Docker Images - Makefile Commands$(NC)"
+	@echo ""
+	@echo "Prerequisites:"
+	@echo "  make check-prereqs              Check if all required tools are installed"
+	@echo ""
+	@echo "Build Commands:"
+	@echo "  make build IMAGE=ubuntu-2204    Build a specific image"
+	@echo "  make build-all                   Build all images"
+	@echo "  make all                         Build and test all images"
+	@echo ""
+	@echo "Test Commands:"
+	@echo "  make test IMAGE=ubuntu-2204      Test a specific image"
+	@echo "  make test-all                    Test all images"
+	@echo ""
+	@echo "Push Commands:"
+	@echo "  make push IMAGE=ubuntu-2204      Push a specific image to registry"
+	@echo "  make push-all                    Push all images to registry"
+	@echo ""
+	@echo "Utility Commands:"
+	@echo "  make list                        List all available images"
+	@echo "  make clean                       Remove all built images"
+	@echo "  make help                        Show this help message"
+	@echo ""
+	@echo "Available Images:"
+	@echo "  Ubuntu:      ubuntu-2004, ubuntu-2204, ubuntu-2404"
+	@echo "  Debian:      debian-10, debian-11, debian-12"
+	@echo "  AlmaLinux:   almalinux-8, almalinux-9"
+	@echo "  RockyLinux:  rockylinux-8, rockylinux-9"
+	@echo "  OracleLinux: oraclelinux-8, oraclelinux-9"
+
+# List all images
+.PHONY: list
+list:
+	@echo "$(BLUE)Available Images:$(NC)"
+	@for img in $(IMAGES); do \
+		folder=$$(echo $$img | cut -d: -f1); \
+		version=$$(echo $$img | cut -d: -f2); \
+		python=$$(echo $$img | cut -d: -f3); \
+		os=$$(echo $$folder | cut -d- -f1); \
+		echo "  $$folder -> $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$os:$$version (Python $$python)"; \
+	done
+
+# Build all images and test them
+.PHONY: all
+all: build-all test-all
+	@echo "$(GREEN)✅ All images built and tested successfully!$(NC)"
+
+# Build a specific image
+.PHONY: build
+build: check-prereqs
+ifndef IMAGE
+	@echo "$(RED)❌ Usage: make build IMAGE=ubuntu-2204$(NC)"
+	@exit 1
+endif
+	@folder=$(IMAGE); \
+	found=0; \
+	for img in $(IMAGES); do \
+		img_folder=$$(echo $$img | cut -d: -f1); \
+		if [ "$$img_folder" = "$$folder" ]; then \
+			found=1; \
+			version=$$(echo $$img | cut -d: -f2); \
+			python=$$(echo $$img | cut -d: -f3); \
+			os=$$(echo $$folder | cut -d- -f1); \
+			image_name="$(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$os:$$version"; \
+			echo "$(BLUE)Building $$folder ($$os:$$version, Python $$python)...$(NC)"; \
+			if [ ! -f requirements-$$python.txt ]; then \
+				echo "$(RED)❌ requirements-$$python.txt not found$(NC)"; \
+				exit 1; \
+			fi; \
+			echo "$(BLUE)Merging requirements-$$python.txt with requirements-common.txt...$(NC)"; \
+			cat requirements-$$python.txt requirements-common.txt > ./images/$$folder/requirements.txt; \
+			if docker build -t $$image_name ./images/$$folder/; then \
+				rm -f ./images/$$folder/requirements.txt; \
+				echo "$(GREEN)✅ Built: $$image_name$(NC)"; \
+			else \
+				rm -f ./images/$$folder/requirements.txt; \
+				echo "$(RED)❌ Failed to build: $$image_name$(NC)"; \
+				exit 1; \
+			fi; \
+			break; \
+		fi; \
+	done; \
+	if [ $$found -eq 0 ]; then \
+		echo "$(RED)❌ Error: Image '$$folder' not found. Run 'make list' to see available images.$(NC)"; \
 		exit 1; \
 	fi
-	@cp requirements.txt $(BUILD_CONTEXT)/
-	docker build \
-		--platform linux/amd64 \
-		--tag $(IMAGE_NAME) \
-		--tag $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$(OS):latest \
-		--label "org.opencontainers.image.source=https://github.com/$(GITHUB_USERNAME)/$(REPO_NAME)" \
-		--label "org.opencontainers.image.description=$(OS) $(VERSION) with Python $(PYTHON_VERSION) for Ansible Molecule testing" \
-		--label "org.opencontainers.image.version=$(VERSION)" \
-		$(BUILD_CONTEXT)
-	@rm -f $(BUILD_CONTEXT)/requirements.txt
-	@echo "$(GREEN)✅ Successfully built $(IMAGE_NAME)$(NC)"
-endef
 
-define push_image
-	$(eval IMAGE_SPEC := $(1))
-	$(eval IMAGE_NAME_FOLDER := $(word 1,$(subst :, ,$(IMAGE_SPEC))))
-	$(eval VERSION := $(word 2,$(subst :, ,$(IMAGE_SPEC))))
-	$(eval OS := $(word 1,$(subst -, ,$(IMAGE_NAME_FOLDER))))
-	$(eval IMAGE_NAME := $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$(OS):$(VERSION))
-	
-	@echo "$(BLUE)Pushing $(IMAGE_NAME)$(NC)"
-	docker push $(IMAGE_NAME)
-	docker push $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$(OS):latest
-	@echo "$(GREEN)✅ Successfully pushed $(IMAGE_NAME)$(NC)"
-endef
-
-define test_image
-	$(eval IMAGE_SPEC := $(1))
-	$(eval IMAGE_NAME_FOLDER := $(word 1,$(subst :, ,$(IMAGE_SPEC))))
-	$(eval VERSION := $(word 2,$(subst :, ,$(IMAGE_SPEC))))
-	$(eval OS := $(word 1,$(subst -, ,$(IMAGE_NAME_FOLDER))))
-	$(eval IMAGE_NAME := $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$(OS):$(VERSION))
-	
-	@echo "$(BLUE)Testing $(IMAGE_NAME)$(NC)"
-	@echo "Testing Python..."
-	@docker run --rm --platform linux/amd64 $(IMAGE_NAME) python3 --version
-	@echo "Testing Ansible..."
-	@docker run --rm --platform linux/amd64 $(IMAGE_NAME) ansible --version
-	@echo "Testing Molecule..."
-	@docker run --rm --platform linux/amd64 $(IMAGE_NAME) molecule --version
-	@echo "$(GREEN)✅ Tests passed for $(IMAGE_NAME)$(NC)"
-endef
-
-# Help target
-.PHONY: help
-help: ## Show this help message
-	@echo "$(BOLD)Docker Images Makefile$(NC)"
-	@echo ""
-	@echo "$(BOLD)Available targets:$(NC)"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(BLUE)%-20s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
-	@echo "$(BOLD)Available images:$(NC)"
-	@echo "  Ubuntu: ubuntu-2004 (20.04, Python 3.9), ubuntu-2204 (22.04, Python 3.10), ubuntu-2404 (24.04, Python 3.11)"
-	@echo "  Debian: debian-10 (10, Python 3.9), debian-11 (11, Python 3.10), debian-12 (12, Python 3.11)"
-	@echo "  AlmaLinux: almalinux-8 (8, Python 3.9), almalinux-9 (9, Python 3.9)"
-	@echo "  Rocky Linux: rockylinux-8 (8, Python 3.9), rockylinux-9 (9, Python 3.9)"
-	@echo ""
-	@echo "$(BOLD)Examples:$(NC)"
-	@echo "  make build-ubuntu-2204     # Build specific image"
-	@echo "  make push-ubuntu-2204      # Push specific image"
-	@echo "  make test-ubuntu-2204      # Test specific image"
-	@echo "  make build-all             # Build all images"
-	@echo "  make push-all              # Push all images"
-
-# Check prerequisites
-.PHONY: check-prereqs
-check-prereqs: ## Check if required tools are installed
-	@echo "$(BLUE)Checking prerequisites...$(NC)"
-	@command -v docker >/dev/null 2>&1 || { echo "$(RED)Docker is required but not installed$(NC)"; exit 1; }
-	@docker info >/dev/null 2>&1 || { echo "$(RED)Docker daemon is not running$(NC)"; exit 1; }
-	@command -v git >/dev/null 2>&1 || { echo "$(RED)Git is required but not installed$(NC)"; exit 1; }
-	@[ -f requirements.txt ] || { echo "$(RED)requirements.txt not found$(NC)"; exit 1; }
-	@echo "$(GREEN)✅ All prerequisites satisfied$(NC)"
-
-# Login to GitHub Container Registry
-.PHONY: login
-login: ## Login to GitHub Container Registry
-	@echo "$(BLUE)Logging in to GitHub Container Registry...$(NC)"
-	@echo "$(GITHUB_TOKEN)" | docker login $(REGISTRY) -u $(GITHUB_USERNAME) --password-stdin
-	@echo "$(GREEN)✅ Successfully logged in$(NC)"
-
-# Build targets
+# Build all images
 .PHONY: build-all
-build-all: check-prereqs ## Build all Docker images
-	@echo "$(BOLD)Building all Docker images...$(NC)"
-	@for image in $(ALL_IMAGES); do \
-		$(call build_image,$$image) || exit 1; \
+build-all: check-prereqs
+	@echo "$(BLUE)Building all images...$(NC)"
+	@for img in $(IMAGES); do \
+		folder=$$(echo $$img | cut -d: -f1); \
+		version=$$(echo $$img | cut -d: -f2); \
+		python=$$(echo $$img | cut -d: -f3); \
+		os=$$(echo $$folder | cut -d- -f1); \
+		image_name="$(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$os:$$version"; \
+		echo "$(BLUE)Building $$folder (Python $$python)...$(NC)"; \
+		if [ ! -f requirements-$$python.txt ]; then \
+			echo "$(RED)❌ requirements-$$python.txt not found$(NC)"; \
+			exit 1; \
+		fi; \
+		echo "$(BLUE)Merging requirements-$$python.txt with requirements-common.txt...$(NC)"; \
+		cat requirements-$$python.txt requirements-common.txt > ./images/$$folder/requirements.txt; \
+		if docker build -t $$image_name ./images/$$folder/; then \
+			rm -f ./images/$$folder/requirements.txt; \
+			echo "$(GREEN)✅ Built: $$image_name$(NC)"; \
+		else \
+			rm -f ./images/$$folder/requirements.txt; \
+			echo "$(RED)❌ Failed to build: $$image_name$(NC)"; \
+			exit 1; \
+		fi; \
 	done
-	@echo "$(GREEN)$(BOLD)✅ All images built successfully!$(NC)"
+	@echo "$(GREEN)✅ All images built successfully!$(NC)"
 
-.PHONY: build-ubuntu
-build-ubuntu: check-prereqs ## Build all Ubuntu images
-	@echo "$(BOLD)Building Ubuntu images...$(NC)"
-	@for image in $(UBUNTU_IMAGES); do \
-		$(call build_image,$$image) || exit 1; \
-	done
+# Test a specific image
+.PHONY: test
+test:
+ifndef IMAGE
+	@echo "$(RED)❌ Usage: make test IMAGE=ubuntu-2204$(NC)"
+	@exit 1
+endif
+	@folder=$(IMAGE); \
+	found=0; \
+	for img in $(IMAGES); do \
+		img_folder=$$(echo $$img | cut -d: -f1); \
+		if [ "$$img_folder" = "$$folder" ]; then \
+			found=1; \
+			version=$$(echo $$img | cut -d: -f2); \
+			os=$$(echo $$folder | cut -d- -f1); \
+			image_name="$(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$os:$$version"; \
+			echo "$(BLUE)Testing $$image_name...$(NC)"; \
+			if docker run --rm $$image_name python3 --version >/dev/null 2>&1 && \
+			   docker run --rm $$image_name ansible --version >/dev/null 2>&1 && \
+			   docker run --rm $$image_name molecule --version >/dev/null 2>&1; then \
+				echo "$(GREEN)✅ Tests passed for $$image_name$(NC)"; \
+			else \
+				echo "$(RED)❌ Tests failed for $$image_name$(NC)"; \
+				exit 1; \
+			fi; \
+			break; \
+		fi; \
+	done; \
+	if [ $$found -eq 0 ]; then \
+		echo "$(RED)❌ Error: Image '$$folder' not found.$(NC)"; \
+		exit 1; \
+	fi
 
-.PHONY: build-debian
-build-debian: check-prereqs ## Build all Debian images
-	@echo "$(BOLD)Building Debian images...$(NC)"
-	@for image in $(DEBIAN_IMAGES); do \
-		$(call build_image,$$image) || exit 1; \
-	done
-
-.PHONY: build-almalinux
-build-almalinux: check-prereqs ## Build all AlmaLinux images
-	@echo "$(BOLD)Building AlmaLinux images...$(NC)"
-	@for image in $(ALMALINUX_IMAGES); do \
-		$(call build_image,$$image) || exit 1; \
-	done
-
-.PHONY: build-rockylinux
-build-rockylinux: check-prereqs ## Build all Rocky Linux images
-	@echo "$(BOLD)Building Rocky Linux images...$(NC)"
-	@for image in $(ROCKYLINUX_IMAGES); do \
-		$(call build_image,$$image) || exit 1; \
-	done
-
-# Individual build targets
-$(foreach image,$(ALL_IMAGES),$(eval $(call INDIVIDUAL_BUILD_TARGET,$(image))))
-define INDIVIDUAL_BUILD_TARGET
-.PHONY: build-$(word 1,$(subst :, ,$(1)))
-build-$(word 1,$(subst :, ,$(1))): check-prereqs ## Build $(word 1,$(subst :, ,$(1))) image
-	$(call build_image,$(1))
-endef
-
-# Push targets
-.PHONY: push-all
-push-all: ## Push all Docker images to registry
-	@echo "$(BOLD)Pushing all Docker images...$(NC)"
-	@for image in $(ALL_IMAGES); do \
-		$(call push_image,$$image) || exit 1; \
-	done
-	@echo "$(GREEN)$(BOLD)✅ All images pushed successfully!$(NC)"
-
-# Individual push targets
-$(foreach image,$(ALL_IMAGES),$(eval $(call INDIVIDUAL_PUSH_TARGET,$(image))))
-define INDIVIDUAL_PUSH_TARGET
-.PHONY: push-$(word 1,$(subst :, ,$(1)))
-push-$(word 1,$(subst :, ,$(1))): ## Push $(word 1,$(subst :, ,$(1))) image
-	$(call push_image,$(1))
-endef
-
-# Test targets
+# Test all images
 .PHONY: test-all
-test-all: ## Test all Docker images
-	@echo "$(BOLD)Testing all Docker images...$(NC)"
-	@for image in $(ALL_IMAGES); do \
-		$(call test_image,$$image) || exit 1; \
+test-all:
+	@echo "$(BLUE)Testing all images...$(NC)"
+	@for img in $(IMAGES); do \
+		folder=$$(echo $$img | cut -d: -f1); \
+		version=$$(echo $$img | cut -d: -f2); \
+		os=$$(echo $$folder | cut -d- -f1); \
+		image_name="$(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$os:$$version"; \
+		echo "$(BLUE)Testing $$image_name...$(NC)"; \
+		if docker run --rm $$image_name python3 --version >/dev/null 2>&1 && \
+		   docker run --rm $$image_name ansible --version >/dev/null 2>&1 && \
+		   docker run --rm $$image_name molecule --version >/dev/null 2>&1; then \
+			echo "$(GREEN)✅ Tests passed for $$image_name$(NC)"; \
+		else \
+			echo "$(RED)❌ Tests failed for $$image_name$(NC)"; \
+			exit 1; \
+		fi; \
 	done
-	@echo "$(GREEN)$(BOLD)✅ All images tested successfully!$(NC)"
+	@echo "$(GREEN)✅ All images tested successfully!$(NC)"
 
-# Individual test targets
-$(foreach image,$(ALL_IMAGES),$(eval $(call INDIVIDUAL_TEST_TARGET,$(image))))
-define INDIVIDUAL_TEST_TARGET
-.PHONY: test-$(word 1,$(subst :, ,$(1)))
-test-$(word 1,$(subst :, ,$(1))): ## Test $(word 1,$(subst :, ,$(1))) image
-	$(call test_image,$(1))
-endef
+# Push a specific image
+.PHONY: push
+push:
+ifndef IMAGE
+	@echo "$(RED)❌ Usage: make push IMAGE=ubuntu-2204$(NC)"
+	@exit 1
+endif
+	@folder=$(IMAGE); \
+	found=0; \
+	for img in $(IMAGES); do \
+		img_folder=$$(echo $$img | cut -d: -f1); \
+		if [ "$$img_folder" = "$$folder" ]; then \
+			found=1; \
+			version=$$(echo $$img | cut -d: -f2); \
+			os=$$(echo $$folder | cut -d- -f1); \
+			image_name="$(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$os:$$version"; \
+			echo "$(BLUE)Pushing $$image_name...$(NC)"; \
+			if docker push $$image_name; then \
+				echo "$(GREEN)✅ Pushed: $$image_name$(NC)"; \
+			else \
+				echo "$(RED)❌ Failed to push: $$image_name$(NC)"; \
+				exit 1; \
+			fi; \
+			break; \
+		fi; \
+	done; \
+	if [ $$found -eq 0 ]; then \
+		echo "$(RED)❌ Error: Image '$$folder' not found.$(NC)"; \
+		exit 1; \
+	fi
 
-# Combined targets
-.PHONY: build-and-test
-build-and-test: build-all test-all ## Build and test all images
+# Push all images
+.PHONY: push-all
+push-all:
+	@echo "$(BLUE)Pushing all images...$(NC)"
+	@for img in $(IMAGES); do \
+		folder=$$(echo $$img | cut -d: -f1); \
+		version=$$(echo $$img | cut -d: -f2); \
+		os=$$(echo $$folder | cut -d- -f1); \
+		image_name="$(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$os:$$version"; \
+		echo "$(BLUE)Pushing $$image_name...$(NC)"; \
+		if docker push $$image_name; then \
+			echo "$(GREEN)✅ Pushed: $$image_name$(NC)"; \
+		else \
+			echo "$(RED)❌ Failed to push: $$image_name$(NC)"; \
+			exit 1; \
+		fi; \
+	done
+	@echo "$(GREEN)✅ All images pushed successfully!$(NC)"
 
-.PHONY: build-and-push
-build-and-push: build-all push-all ## Build and push all images
-
-.PHONY: all
-all: build-and-test push-all ## Build, test, and push all images
-
-# Cleanup targets
+# Clean up all built images
 .PHONY: clean
-clean: ## Remove all built images
+clean:
 	@echo "$(BLUE)Cleaning up images...$(NC)"
-	@for image in $(ALL_IMAGES); do \
-		IMAGE_NAME_FOLDER=$$(echo $$image | cut -d: -f1); \
-		VERSION=$$(echo $$image | cut -d: -f2); \
-		OS=$$(echo $$IMAGE_NAME_FOLDER | cut -d- -f1); \
-		docker rmi -f $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$OS:$$VERSION 2>/dev/null || true; \
-		docker rmi -f $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$OS:latest 2>/dev/null || true; \
+	@for img in $(IMAGES); do \
+		folder=$$(echo $$img | cut -d: -f1); \
+		version=$$(echo $$img | cut -d: -f2); \
+		os=$$(echo $$folder | cut -d- -f1); \
+		image_name="$(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$os:$$version"; \
+		docker rmi -f $$image_name 2>/dev/null || true; \
 	done
 	@echo "$(GREEN)✅ Cleanup completed$(NC)"
 
-.PHONY: clean-dangling
-clean-dangling: ## Remove dangling images
-	@echo "$(BLUE)Removing dangling images...$(NC)"
-	@docker image prune -f
-	@echo "$(GREEN)✅ Dangling images removed$(NC)"
-
-# Info targets
-.PHONY: list-images
-list-images: ## List all built images
-	@echo "$(BOLD)Built images:$(NC)"
-	@docker images | grep "$(REGISTRY)/$(GITHUB_USERNAME)/molecule-" || echo "No images found"
-
-.PHONY: info
-info: ## Show configuration information
-	@echo "$(BOLD)Configuration:$(NC)"
-	@echo "  Registry: $(REGISTRY)"
-	@echo "  GitHub Username: $(GITHUB_USERNAME)"
-	@echo "  Repository: $(REPO_NAME)"
-	@echo ""
-	@echo "$(BOLD)Images to build:$(NC)"
-	@for image in $(ALL_IMAGES); do \
-		IMAGE_NAME_FOLDER=$$(echo $$image | cut -d: -f1); \
-		VERSION=$$(echo $$image | cut -d: -f2); \
-		PYTHON=$$(echo $$image | cut -d: -f3); \
-		OS=$$(echo $$IMAGE_NAME_FOLDER | cut -d- -f1); \
-		echo "  $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$OS:$$VERSION ($$IMAGE_NAME_FOLDER, Python $$PYTHON)"; \
-	done
-
-# Development targets
-.PHONY: dev-build
-dev-build: ## Quick build for development (Ubuntu 22.04 only)
-	$(call build_image,ubuntu-2204:22.04:3.10)
-
-.PHONY: dev-test
-dev-test: ## Quick test for development (Ubuntu 22.04 only)
-	$(call test_image,ubuntu-2204:22.04:3.10)
-
-# Security scan
-.PHONY: scan
-scan: ## Run security scan on Ubuntu 22.04 image
-	@echo "$(BLUE)Running security scan...$(NC)"
-	@docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-		aquasec/trivy:latest image $(REGISTRY)/$(GITHUB_USERNAME)/molecule-ubuntu:22.04
-
-# Generate documentation
-.PHONY: docs
-docs: ## Generate image documentation
-	@echo "$(BOLD)Generating documentation...$(NC)"
-	@echo "# Available Docker Images" > IMAGES.md
-	@echo "" >> IMAGES.md
-	@for image in $(ALL_IMAGES); do \
-		IMAGE_NAME_FOLDER=$$(echo $$image | cut -d: -f1); \
-		VERSION=$$(echo $$image | cut -d: -f2); \
-		PYTHON=$$(echo $$image | cut -d: -f3); \
-		OS=$$(echo $$IMAGE_NAME_FOLDER | cut -d- -f1); \
-		echo "## $$IMAGE_NAME_FOLDER ($$OS $$VERSION)" >> IMAGES.md; \
-		echo "" >> IMAGES.md; \
-		echo "- **Base OS**: $$OS $$VERSION" >> IMAGES.md; \
-		echo "- **Python Version**: $$PYTHON" >> IMAGES.md; \
-		echo "- **Image**: \`$(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$OS:$$VERSION\`" >> IMAGES.md; \
-		echo "- **Pull Command**: \`docker pull $(REGISTRY)/$(GITHUB_USERNAME)/molecule-$$OS:$$VERSION\`" >> IMAGES.md; \
-		echo "" >> IMAGES.md; \
-	done
-	@echo "$(GREEN)✅ Documentation generated in IMAGES.md$(NC)"

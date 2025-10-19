@@ -58,10 +58,9 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
-# Copy requirements and install Python packages (with --break-system-packages for PEP 668)
-COPY requirements.txt /tmp/requirements.txt
-RUN python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/requirements.txt \
-    && rm /tmp/requirements.txt
+# Copy requirements and install Python packages
+COPY requirements.txt /tmp/
+RUN python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/requirements.txt
 
 # Configure systemd
 RUN systemctl set-default multi-user.target \

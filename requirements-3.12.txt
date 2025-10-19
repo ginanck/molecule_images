@@ -1,0 +1,4 @@
+# Python 3.12 compatible requirements for Ansible Molecule testing
+
+# Pin ansible-core version for consistent molecule testing (other packages auto-resolve)
+ansible-core==2.15.13

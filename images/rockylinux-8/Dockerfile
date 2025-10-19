@@ -20,6 +20,8 @@ RUN dnf -y update \
         gcc gcc-c++ make \
         openssl-devel libffi-devel \
         pkgconfig \
+        # Rust and cargo for cryptography package building
+        rust cargo \
         # SSH
         openssh-server openssh-clients \
         # Development tools
@@ -47,11 +49,12 @@ RUN dnf config-manager --add-repo https://download.docker.com/linux/centos/docke
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
-# Copy requirements and install Python packages
-COPY requirements.txt /tmp/requirements.txt
-RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel \
-    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
-    && rm /tmp/requirements.txt
+# Upgrade pip and install setuptools-rust for cryptography package
+COPY requirements.txt /tmp/
+RUN python3 -m pip install --upgrade pip setuptools setuptools-rust
+# Set environment variable to skip ansible conflict checks for Python 3.6
+ENV ANSIBLE_SKIP_CONFLICT_CHECK=1
+RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Configure systemd
 RUN systemctl set-default multi-user.target \
