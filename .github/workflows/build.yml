@@ -30,6 +30,8 @@ env:
 permissions:
   contents: read
   packages: write
+  security-events: write
+  actions: read
 
 jobs:
   # Build stage for PRs - builds only, no push
