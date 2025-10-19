@@ -1,8 +1,8 @@
 FROM almalinux:8
 
-LABEL maintainer="Your Name <your.email@example.com>"
+LABEL maintainer="Gorkem Korkmaz"
 LABEL description="AlmaLinux 8 image with Python 3.6 optimized for Ansible Molecule testing"
-LABEL org.opencontainers.image.source="https://github.com/your-username/docker-images"
+LABEL org.opencontainers.image.source="https://github.com/ginanck/molecule_images"
 
 ENV container=docker
 ENV PYTHONUNBUFFERED=1
