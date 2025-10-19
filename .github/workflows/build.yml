@@ -316,6 +316,9 @@ jobs:
           - os: oraclelinux
             version: "8"
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -352,5 +355,14 @@ jobs:
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: steps.sarif-check.outputs.sarif-exists == 'true'
+        continue-on-error: true  # Don't fail if Code Scanning is not enabled
         with:
           sarif_file: 'trivy-results.sarif'
+
+      - name: Upload SARIF as artifact (fallback)
+        uses: actions/upload-artifact@v4
+        if: steps.sarif-check.outputs.sarif-exists == 'true'
+        with:
+          name: trivy-sarif-${{ matrix.os }}-${{ matrix.version }}
+          path: trivy-results.sarif
+          retention-days: 30
