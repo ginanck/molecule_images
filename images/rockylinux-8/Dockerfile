@@ -9,19 +9,8 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Force use of specific reliable mirror to avoid mirror sync issues
-RUN ls -la /etc/yum.repos.d/ || true \
-    && if ls /etc/yum.repos.d/Rocky*.repo >/dev/null 2>&1; then \
-         sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://download.rockylinux.org/pub/rocky|g' /etc/yum.repos.d/Rocky*.repo \
-         && sed -i 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/Rocky*.repo; \
-       elif ls /etc/yum.repos.d/rocky*.repo >/dev/null 2>&1; then \
-         sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://download.rockylinux.org/pub/rocky|g' /etc/yum.repos.d/rocky*.repo \
-         && sed -i 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/rocky*.repo; \
-       elif ls /etc/yum.repos.d/Rocky-*.repo >/dev/null 2>&1; then \
-         sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://download.rockylinux.org/pub/rocky|g' /etc/yum.repos.d/Rocky-*.repo \
-         && sed -i 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/Rocky-*.repo; \
-       else \
-         echo "No Rocky Linux repository files found - skipping mirror configuration"; \
-       fi
+RUN sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://download.rockylinux.org/pub/rocky|g' /etc/yum.repos.d/Rocky-*.repo \
+    && sed -i 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/Rocky-*.repo
 
 # Install system dependencies and Python
 RUN dnf -y update \
