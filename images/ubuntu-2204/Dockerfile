@@ -1,8 +1,8 @@
 FROM ubuntu:22.04
 
-LABEL maintainer="Your Name <your.email@example.com>"
+LABEL maintainer="Gorkem Korkmaz"
 LABEL description="Ubuntu 22.04 image with Python 3.10 optimized for Ansible Molecule testing"
-LABEL org.opencontainers.image.source="https://github.com/your-username/docker-images"
+LABEL org.opencontainers.image.source="https://github.com/ginanck/molecule_images"
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,53 +14,27 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Install system dependencies and Python
-RUN apt-get update && apt-get install -y \
-    # Python and development tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip python3-dev python3-venv \
-    # Core system packages
-    systemd systemd-cron \
+    systemd \
     sudo \
-    # Development tools and libraries needed for Python packages
-    build-essential \
     libffi-dev \
     libssl-dev \
-    pkg-config \
-    # SSH
     openssh-server openssh-client \
-    # Development tools
-    git curl wget vim nano \
-    # Network tools
-    iproute2 iputils-ping net-tools \
-    # Archive tools
-    tar gzip unzip \
-    # Process management
+    git curl wget \
     procps \
-    # Certificate management
     ca-certificates \
-    # Additional tools
-    rsync \
-    lsb-release \
-    # GPG tools for Docker repository
-    gnupg \
-    # Clean up
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Install Docker
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu jammy stable" > /etc/apt/sources.list.d/docker.list \
-    && apt-get update \
-    && apt-get install -y docker-ce-cli \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
-# Copy requirements and install Python packages
 COPY requirements.txt /tmp/
-RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
+RUN python3 -m pip install --upgrade pip setuptools \
+    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Configure systemd
 RUN systemctl set-default multi-user.target \

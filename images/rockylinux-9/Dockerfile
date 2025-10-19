@@ -1,8 +1,8 @@
 FROM rockylinux:9
 
-LABEL maintainer="Your Name <your.email@example.com>"
+LABEL maintainer="Gorkem Korkmaz"
 LABEL description="Rocky Linux 9 image with Python 3.9 optimized for Ansible Molecule testing"
-LABEL org.opencontainers.image.source="https://github.com/your-username/docker-images"
+LABEL org.opencontainers.image.source="https://github.com/ginanck/molecule_images"
 
 ENV container=docker
 ENV PYTHONUNBUFFERED=1
@@ -14,49 +14,26 @@ RUN sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://down
 
 # Install system dependencies and Python
 RUN dnf clean all \
-    && dnf -y update \
     && dnf -y install epel-release \
-    && dnf -y install --allowerasing \
-        # Python and development tools
+    && dnf -y install --nodocs \
         python3 python3-pip python3-devel \
-        # Core system packages
         systemd sudo \
-        # Development tools and libraries needed for Python packages
-        gcc gcc-c++ make \
         openssl-devel libffi-devel \
-        pkgconfig \
-        # SSH
         openssh-server openssh-clients \
-        # Development tools
-        git curl wget vim nano \
-        # Network tools
-        iproute net-tools \
-        # Archive tools
-        tar gzip unzip \
-        # Process management
+        git curl wget \
         procps-ng \
-        # Certificate management
         ca-certificates \
-        # Additional tools
-        rsync \
-        # GPG tools for Docker repository
-        gnupg2 \
-        # Clean up
-        && dnf clean all
-
-# Install Docker with repository refresh and retry logic for reliability
-RUN dnf clean all \
-    && dnf makecache --refresh \
-    && dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo \
-    && (dnf -y install docker-ce-cli || (sleep 30 && dnf clean all && dnf -y install docker-ce-cli)) \
-    && dnf clean all
+        && dnf clean all \
+        && rm -rf /var/cache/dnf /var/log/*
 
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
-# Copy requirements and install Python packages
 COPY requirements.txt /tmp/
-RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
+RUN python3 -m pip install --upgrade pip setuptools \
+    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf /var/log/*
 
 # Configure systemd
 RUN systemctl set-default multi-user.target \
