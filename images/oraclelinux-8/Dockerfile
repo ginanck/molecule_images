@@ -1,7 +1,7 @@
-FROM almalinux:9
+FROM oraclelinux:8
 
 LABEL maintainer="Your Name <your.email@example.com>"
-LABEL description="AlmaLinux 9 image with Python 3.9 optimized for Ansible Molecule testing"
+LABEL description="Oracle Linux 8 image with Python 3.6 optimized for Ansible Molecule testing"
 LABEL org.opencontainers.image.source="https://github.com/your-username/docker-images"
 
 ENV container=docker
@@ -49,6 +49,9 @@ RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 # Copy requirements and install Python packages
 COPY requirements.txt /tmp/
+RUN python3 -m pip install --upgrade pip setuptools setuptools-rust
+# Set environment variable to skip ansible conflict checks for Python 3.6
+ENV ANSIBLE_SKIP_CONFLICT_CHECK=1
 RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Configure systemd

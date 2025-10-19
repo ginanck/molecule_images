@@ -1,0 +1,16 @@
+# Ansible ecosystem packages (versions controlled per Python version via ansible-core pin)
+ansible-compat
+ansible-lint
+
+# Mandatory for ansible-core
+cryptography
+importlib-resources
+jinja2
+packaging
+PyYAML
+resolvelib
+cffi
+typing-extensions
+MarkupSafe
+pycparser
+netaddr
