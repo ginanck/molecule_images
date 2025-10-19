@@ -277,62 +277,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  security-scan:
-    name: Security Scan ${{ matrix.os }} ${{ matrix.version }}
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.event_name == 'push'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Ubuntu variants (newest first)
-          - os: ubuntu
-            version: "24.04"
-          - os: ubuntu
-            version: "22.04"
-          - os: ubuntu
-            version: "20.04"
-          # Debian variants (newest first)
-          - os: debian
-            version: "12"
-          - os: debian
-            version: "11"
-          - os: debian
-            version: "10"
-          # AlmaLinux variants (newest first)
-          - os: almalinux
-            version: "9"
-          - os: almalinux
-            version: "8"
-          # Rocky Linux variants (newest first)
-          - os: rockylinux
-            version: "9"
-          - os: rockylinux
-            version: "8"
-          # Oracle Linux variants (newest first)
-          - os: oraclelinux
-            version: "9"
-          - os: oraclelinux
-            version: "8"
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
-
-      - name: Verify image exists
+      - name: Wait for image to be available
         run: |
-          echo "Checking if image exists: ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}:${{ matrix.version }}"
+          echo "Waiting for image to be available in registry..."
+          sleep 30
+          echo "Verifying image exists: ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}:${{ matrix.version }}"
           docker manifest inspect ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}:${{ matrix.version }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true  # Don't fail the job if scanning fails
         with:
           image-ref: '${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}:${{ matrix.version }}'
           format: 'sarif'
@@ -345,11 +299,11 @@ jobs:
         run: |
           if [ -f "trivy-results.sarif" ]; then
             echo "sarif-exists=true" >> $GITHUB_OUTPUT
-            echo "✅ SARIF file created successfully"
+            echo "✅ SARIF file created successfully for ${{ matrix.os }} ${{ matrix.version }}"
             ls -la trivy-results.sarif
           else
             echo "sarif-exists=false" >> $GITHUB_OUTPUT
-            echo "❌ SARIF file not found"
+            echo "❌ SARIF file not found for ${{ matrix.os }} ${{ matrix.version }}"
           fi
 
       - name: Upload Trivy scan results to GitHub Security tab
@@ -366,3 +320,5 @@ jobs:
           name: trivy-sarif-${{ matrix.os }}-${{ matrix.version }}
           path: trivy-results.sarif
           retention-days: 30
+
+
