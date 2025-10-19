@@ -1,7 +1,4 @@
 # Python 3.10 compatible requirements for Ansible Molecule testing
 
-# Ansible stack - version pinned for consistency with Python 3.10 compatibility
-ansible==7.7.0
-ansible-compat==4.1.11
+# Pin ansible-core version for consistent molecule testing (other packages auto-resolve)
 ansible-core==2.14.17
-ansible-lint==6.17.2
