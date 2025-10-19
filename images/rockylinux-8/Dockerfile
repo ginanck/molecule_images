@@ -8,6 +8,10 @@ ENV container=docker
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
+# Force use of specific reliable mirror to avoid mirror sync issues
+RUN sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://download.rockylinux.org/pub/rocky|g' /etc/yum.repos.d/Rocky-*.repo \
+    && sed -i 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/Rocky-*.repo
+
 # Install system dependencies and Python
 RUN dnf -y update \
     && dnf -y install epel-release \
