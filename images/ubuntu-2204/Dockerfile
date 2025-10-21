@@ -1,8 +1,8 @@
 FROM ubuntu:22.04
 
 LABEL maintainer="Gorkem Korkmaz"
-LABEL description="Ubuntu 22.04 image with Python 3.10 optimized for Ansible Molecule testing"
-LABEL org.opencontainers.image.source="https://github.com/ginanck/molecule_images"
+LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images
+LABEL org.opencontainers.image.description="Ubuntu 22.04 image"
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive

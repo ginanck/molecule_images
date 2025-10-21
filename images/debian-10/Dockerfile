@@ -1,8 +1,8 @@
 FROM debian:10
 
 LABEL maintainer="Gorkem Korkmaz"
-LABEL description="Debian 10 (Buster) image with Python 3.7 optimized for Ansible Molecule testing"
-LABEL org.opencontainers.image.source="https://github.com/ginanck/molecule_images"
+LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images
+LABEL org.opencontainers.image.description="Debian 10 (Buster) image"
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
