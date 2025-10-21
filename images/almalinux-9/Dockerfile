@@ -12,7 +12,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN dnf -y update \
     && dnf -y install epel-release \
     && dnf -y install --allowerasing --nodocs \
-        python3 python3-pip python3-devel \
+        python3 python3-pip \
         systemd sudo \
         openssl-devel libffi-devel \
         openssh-server openssh-clients \
@@ -22,20 +22,8 @@ RUN dnf -y update \
         && dnf clean all \
         && rm -rf /var/cache/dnf /var/log/*
 
-# Install Docker CLI
-RUN dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo \
-    && dnf -y install --nodocs docker-ce-cli \
-    && dnf clean all \
-    && rm -rf /var/cache/dnf /var/log/*
-
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
-
-COPY requirements.txt /tmp/
-RUN python3 -m pip install --upgrade pip setuptools \
-    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
-    && dnf clean all \
-    && rm -rf /var/cache/dnf /var/log/*
 
 # Configure systemd
 RUN systemctl set-default multi-user.target \

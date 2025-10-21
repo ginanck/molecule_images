@@ -1,5 +1,0 @@
-# Python 3.6 compatible requirements for Ansible Molecule testing
-# Note: Python 3.6 support is very limited, using last known working versions
-
-# Pin ansible-core version for consistent molecule testing (other packages auto-resolve)
-ansible-core==2.11.12
