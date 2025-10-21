@@ -1,8 +1,8 @@
 FROM debian:11
 
 LABEL maintainer="Gorkem Korkmaz"
-LABEL description="Debian 11 (Bullseye) image with Python 3.9 optimized for Ansible Molecule testing"
-LABEL org.opencontainers.image.source="https://github.com/ginanck/molecule_images"
+LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images
+LABEL org.opencontainers.image.description="Debian 11 (Bullseye) image"
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
