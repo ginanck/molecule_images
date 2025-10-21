@@ -1,32 +1,30 @@
-FROM ubuntu:24.04
+FROM rockylinux/rockylinux:10.0
 
 LABEL maintainer="Gorkem Korkmaz"
 LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images
-LABEL org.opencontainers.image.description="Ubuntu 24.04 image"
+LABEL org.opencontainers.image.description="Rocky Linux 10 image"
 
-# Prevent interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
 ENV container=docker
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Set timezone
-ENV TZ=UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Force use of specific reliable mirror to avoid mirror sync issues
+RUN sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://download.rockylinux.org/pub/rocky|g' /etc/yum.repos.d/rocky*.repo \
+    && sed -i 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/rocky*.repo
 
 # Install system dependencies and Python
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip \
-    systemd \
-    sudo \
-    libffi-dev \
-    libssl-dev \
-    openssh-server openssh-client \
-    git curl wget gpg \
-    procps \
-    ca-certificates \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN dnf clean all \
+    && dnf -y install epel-release \
+    && dnf -y install --allowerasing --nodocs \
+        python3 python3-pip \
+        systemd sudo \
+        openssl-devel libffi-devel \
+        openssh-server openssh-clients \
+        git curl wget gpg \
+        procps-ng \
+        ca-certificates \
+        && dnf clean all \
+        && rm -rf /var/cache/dnf /var/log/*
 
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
@@ -39,18 +37,17 @@ RUN systemctl set-default multi-user.target \
         sys-kernel-config.mount \
         display-manager.service \
         graphical.target \
-        systemd-logind.service \
-        systemd-resolved.service
+        systemd-logind.service
 
 # Configure SSH
 RUN mkdir -p /var/run/sshd \
     && ssh-keygen -A \
     && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
     && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
-    && systemctl enable ssh
+    && systemctl enable sshd
 
 # Create a non-root user for testing
-RUN useradd -m -s /bin/bash -G sudo ansible \
+RUN useradd -m -s /bin/bash -G wheel ansible \
     && echo 'ansible:ansible' | chpasswd \
     && echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
     && mkdir -p /home/ansible/.ssh \
@@ -67,7 +64,7 @@ VOLUME ["/sys/fs/cgroup"]
 EXPOSE 22
 
 # Use systemd as the init system
-CMD ["/lib/systemd/systemd"]
+CMD ["/usr/sbin/init"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

@@ -1,8 +1,8 @@
-FROM debian:12
+FROM debian:12.9-slim
 
 LABEL maintainer="Gorkem Korkmaz"
-LABEL description="Debian 12 (Bookworm) image with Python 3.11 optimized for Ansible Molecule testing"
-LABEL org.opencontainers.image.source="https://github.com/ginanck/molecule_images"
+LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images
+LABEL org.opencontainers.image.description="Debian 12 (Bookworm) image"
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive

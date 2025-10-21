@@ -1,8 +1,8 @@
-FROM oraclelinux:8
+FROM oraclelinux:8.9
 
 LABEL maintainer="Gorkem Korkmaz"
-LABEL description="Oracle Linux 8 image with Python 3.6 optimized for Ansible Molecule testing"
-LABEL org.opencontainers.image.source="https://github.com/ginanck/molecule_images"
+LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images
+LABEL org.opencontainers.image.description="Oracle Linux 8 image"
 
 ENV container=docker
 ENV PYTHONUNBUFFERED=1

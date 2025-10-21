@@ -36,7 +36,7 @@ permissions:
 jobs:
   # Build stage for PRs - builds only, no push
   build-pr:
-    name: Build PR - ${{ matrix.os }} ${{ matrix.version }}
+    name: Build PR - ${{ matrix.distro }} ${{ matrix.version }}
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     strategy:
@@ -44,102 +44,104 @@ jobs:
       matrix:
         include:
           # Ubuntu variants with native Python versions (newest first)
-          - os: ubuntu
-            version: "24.04"
-            image_name: ubuntu-2404
-            platforms: linux/amd64
-            python_version: "3.12"
-          - os: ubuntu
-            version: "22.04"
-            image_name: ubuntu-2204
-            platforms: linux/amd64
-            python_version: "3.10"
-          - os: ubuntu
+          - distro: ubuntu
             version: "20.04"
             image_name: ubuntu-2004
-            platforms: linux/amd64
-            python_version: "3.8"
+          - distro: ubuntu
+            version: "22.04"
+            image_name: ubuntu-2204
+          - distro: ubuntu
+            version: "24.04"
+            image_name: ubuntu-2404
+
           # Debian variants with native Python versions (newest first)
-          - os: debian
-            version: "12"
-            image_name: debian-12
-            platforms: linux/amd64
-            python_version: "3.11"
-          - os: debian
-            version: "11"
-            image_name: debian-11
-            platforms: linux/amd64
-            python_version: "3.9"
-          - os: debian
+          - distro: debian
             version: "10"
             image_name: debian-10
-            platforms: linux/amd64
-            python_version: "3.7"
+          - distro: debian
+            version: "11"
+            image_name: debian-11
+          - distro: debian
+            version: "12"
+            image_name: debian-12
+          - distro: debian
+            version: "13"
+            image_name: debian-13
+
           # AlmaLinux variants with native Python versions (newest first)
-          - os: almalinux
-            version: "9"
-            image_name: almalinux-9
-            platforms: linux/amd64
-            python_version: "3.9"
-          - os: almalinux
+          - distro: almalinux
             version: "8"
             image_name: almalinux-8
-            platforms: linux/amd64
-            python_version: "3.6"
-          # Rocky Linux variants with native Python versions (newest first)
-          - os: rockylinux
+          - distro: almalinux
             version: "9"
-            image_name: rockylinux-9
-            platforms: linux/amd64
-            python_version: "3.9"
-          - os: rockylinux
+            image_name: almalinux-9
+          - distro: almalinux
+            version: "10"
+            image_name: almalinux-10
+
+          # Rocky Linux variants with native Python versions (newest first)
+          - distro: rockylinux
             version: "8"
             image_name: rockylinux-8
-            platforms: linux/amd64
-            python_version: "3.6"
-          # Oracle Linux variants with native Python versions (newest first)
-          - os: oraclelinux
+          - distro: rockylinux
             version: "9"
-            image_name: oraclelinux-9
-            platforms: linux/amd64
-            python_version: "3.9"
-          - os: oraclelinux
+            image_name: rockylinux-9
+          - distro: rockylinux
+            version: "10"
+            image_name: rockylinux-10
+
+          # Oracle Linux variants with native Python versions (newest first)
+          - distro: oraclelinux
             version: "8"
             image_name: oraclelinux-8
-            platforms: linux/amd64
-            python_version: "3.6"
+          - distro: oraclelinux
+            version: "9"
+            image_name: oraclelinux-9
+          - distro: oraclelinux
+            version: "10"
+            image_name: oraclelinux-10
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}
+          images: ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.distro }}
           tags: |
             type=ref,event=pr
             type=raw,value=${{ matrix.version }}-pr-{{sha}}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Build Docker image (PR - No Push)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./images/${{ matrix.image_name }}
-          platforms: ${{ matrix.platforms }}
+          platforms: linux/amd64,linux/arm64/v8
           push: false
-          load: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
 
   # Build and push stage for master branch merges
   build-and-push:
-    name: Build & Push - ${{ matrix.os }} ${{ matrix.version }}
+    name: Build & Push - ${{ matrix.distro }} ${{ matrix.version }}
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.force_push)
     strategy:
@@ -147,77 +149,122 @@ jobs:
       matrix:
         include:
           # Ubuntu variants with native Python versions (newest first)
-          - os: ubuntu
-            version: "24.04"
-            image_name: ubuntu-2404
-            platforms: linux/amd64
-            python_version: "3.12"
-          - os: ubuntu
-            version: "22.04"
-            image_name: ubuntu-2204
-            platforms: linux/amd64
-            python_version: "3.10"
-          - os: ubuntu
+          - distro: ubuntu
             version: "20.04"
             image_name: ubuntu-2004
-            platforms: linux/amd64
-            python_version: "3.8"
+            tags: |
+              type=raw,value=20.04-latest
+              type=raw,value=20.04
+          - distro: ubuntu
+            version: "22.04"
+            image_name: ubuntu-2204
+            tags: |
+              type=raw,value=22.04-latest
+              type=raw,value=22.04
+          - distro: ubuntu
+            version: "24.04"
+            image_name: ubuntu-2404
+            tags: |
+              type=raw,value=24.04-latest
+              type=raw,value=24.04
+
           # Debian variants with native Python versions (newest first)
-          - os: debian
-            version: "12"
-            image_name: debian-12
-            platforms: linux/amd64
-            python_version: "3.11"
-          - os: debian
-            version: "11"
-            image_name: debian-11
-            platforms: linux/amd64
-            python_version: "3.9"
-          - os: debian
+          - distro: debian
             version: "10"
             image_name: debian-10
-            platforms: linux/amd64
-            python_version: "3.7"
+            tags: |
+              type=raw,value=10-latest
+              type=raw,value=10
+          - distro: debian
+            version: "11"
+            image_name: debian-11
+            tags: |
+              type=raw,value=11-latest
+              type=raw,value=11
+          - distro: debian
+            version: "12"
+            image_name: debian-12
+            tags: |
+              type=raw,value=12-latest
+              type=raw,value=12
+          - distro: debian
+            version: "13"
+            image_name: debian-13
+            tags: |
+              type=raw,value=13-latest
+              type=raw,value=13
+
           # AlmaLinux variants with native Python versions (newest first)
-          - os: almalinux
-            version: "9"
-            image_name: almalinux-9
-            platforms: linux/amd64
-            python_version: "3.9"
-          - os: almalinux
+          - distro: almalinux
             version: "8"
             image_name: almalinux-8
-            platforms: linux/amd64
-            python_version: "3.6"
-          # Rocky Linux variants with native Python versions (newest first)
-          - os: rockylinux
+            tags: |
+              type=raw,value=8-latest
+              type=raw,value=8
+          - distro: almalinux
             version: "9"
-            image_name: rockylinux-9
-            platforms: linux/amd64
-            python_version: "3.9"
-          - os: rockylinux
+            image_name: almalinux-9
+            tags: |
+              type=raw,value=9-latest
+              type=raw,value=9
+          - distro: almalinux
+            version: "10"
+            image_name: almalinux-10
+            tags: |
+              type=raw,value=10-latest
+              type=raw,value=10
+
+          # Rocky Linux variants with native Python versions (newest first)
+          - distro: rockylinux
             version: "8"
             image_name: rockylinux-8
-            platforms: linux/amd64
-            python_version: "3.6"
-          # Oracle Linux variants with native Python versions (newest first)
-          - os: oraclelinux
+            tags: |
+              type=raw,value=8-latest
+              type=raw,value=8
+          - distro: rockylinux
             version: "9"
-            image_name: oraclelinux-9
-            platforms: linux/amd64
-            python_version: "3.9"
-          - os: oraclelinux
+            image_name: rockylinux-9
+            tags: |
+              type=raw,value=9-latest
+              type=raw,value=9
+          - distro: rockylinux
+            version: "10"
+            image_name: rockylinux-10
+            tags: |
+              type=raw,value=10-latest
+              type=raw,value=10
+
+          # Oracle Linux variants with native Python versions (newest first)
+          - distro: oraclelinux
             version: "8"
             image_name: oraclelinux-8
-            platforms: linux/amd64
-            python_version: "3.6"
+            tags: |
+              type=raw,value=8-latest
+              type=raw,value=8
+          - distro: oraclelinux
+            version: "9"
+            image_name: oraclelinux-9
+            tags: |
+              type=raw,value=9-latest
+              type=raw,value=9
+          - distro: oraclelinux
+            version: "10"
+            image_name: oraclelinux-10
+            tags: |
+              type=raw,value=10-latest
+              type=raw,value=10
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.distro }}
+          tags: |
+            ${{ matrix.tags }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -226,41 +273,43 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}
-          tags: |
-            type=ref,event=branch
-            type=raw,value=${{ matrix.version }}-{{date 'YYYYMMDD-HHmmss'}}
-            type=raw,value=${{ matrix.version }}-latest
-            type=raw,value=${{ matrix.version }}
-            type=raw,value=latest,enable={{is_default_branch}}
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./images/${{ matrix.image_name }}
-          platforms: ${{ matrix.platforms }}
+          platforms: linux/amd64,linux/arm64/v8
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Wait for image to be available
         run: |
           echo "Waiting for image to be available in registry..."
           sleep 30
-          echo "Verifying image exists: ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}:${{ matrix.version }}"
-          docker manifest inspect ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}:${{ matrix.version }}
+          echo "Verifying image exists: ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.distro }}:${{ matrix.version }}"
+          docker manifest inspect ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.distro }}:${{ matrix.version }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         continue-on-error: true  # Don't fail the job if scanning fails
         with:
-          image-ref: '${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}:${{ matrix.version }}'
+          image-ref: '${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.distro }}:${{ matrix.version }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
@@ -271,11 +320,11 @@ jobs:
         run: |
           if [ -f "trivy-results.sarif" ]; then
             echo "sarif-exists=true" >> $GITHUB_OUTPUT
-            echo "✅ SARIF file created successfully for ${{ matrix.os }} ${{ matrix.version }}"
+            echo "✅ SARIF file created successfully for ${{ matrix.distro }} ${{ matrix.version }}"
             ls -la trivy-results.sarif
           else
             echo "sarif-exists=false" >> $GITHUB_OUTPUT
-            echo "❌ SARIF file not found for ${{ matrix.os }} ${{ matrix.version }}"
+            echo "❌ SARIF file not found for ${{ matrix.distro }} ${{ matrix.version }}"
           fi
 
       - name: Upload Trivy scan results to GitHub Security tab
@@ -289,6 +338,6 @@ jobs:
         uses: actions/upload-artifact@v4
         if: steps.sarif-check.outputs.sarif-exists == 'true'
         with:
-          name: trivy-sarif-${{ matrix.os }}-${{ matrix.version }}
+          name: trivy-sarif-${{ matrix.distro }}-${{ matrix.version }}
           path: trivy-results.sarif
           retention-days: 30

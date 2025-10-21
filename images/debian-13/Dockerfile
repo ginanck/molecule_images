@@ -1,8 +1,8 @@
-FROM ubuntu:24.04
+FROM debian:13.1-slim
 
 LABEL maintainer="Gorkem Korkmaz"
 LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images
-LABEL org.opencontainers.image.description="Ubuntu 24.04 image"
+LABEL org.opencontainers.image.description="Debian 13 (Trixie) image"
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -39,8 +39,7 @@ RUN systemctl set-default multi-user.target \
         sys-kernel-config.mount \
         display-manager.service \
         graphical.target \
-        systemd-logind.service \
-        systemd-resolved.service
+        systemd-logind.service
 
 # Configure SSH
 RUN mkdir -p /var/run/sshd \
