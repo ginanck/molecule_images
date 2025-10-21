@@ -16,7 +16,7 @@ RUN dnf clean all \
         systemd sudo \
         openssl-devel libffi-devel \
         openssh-server openssh-clients \
-        git curl wget \
+        git curl wget gpg \
         procps-ng \
         ca-certificates \
         && dnf clean all \

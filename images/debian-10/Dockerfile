@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     libssl-dev \
     openssh-server openssh-client \
-    git curl wget \
+    git curl wget gpg \
     procps \
     ca-certificates \
     && apt-get clean \
