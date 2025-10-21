@@ -232,11 +232,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.GITHUB_USERNAME }}/molecule-${{ matrix.os }}
           tags: |
-            type=ref,event=branch
             type=raw,value=${{ matrix.version }}-{{date 'YYYYMMDD-HHmmss'}}
             type=raw,value=${{ matrix.version }}-latest
             type=raw,value=${{ matrix.version }}
-            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
