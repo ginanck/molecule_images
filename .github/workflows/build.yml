@@ -116,20 +116,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Copy appropriate requirements file to image directory
-        run: |
-          # Copy the Python version-specific requirements file
-          if [ -f "requirements-${{ matrix.python_version }}.txt" ]; then
-            echo "Using requirements-${{ matrix.python_version }}.txt for Python ${{ matrix.python_version }}"
-            cat requirements-${{ matrix.python_version }}.txt requirements-common.txt > ./images/${{ matrix.image_name }}/requirements.txt
-          else
-            echo "Python ${{ matrix.python_version }} specific requirements file not found, using default requirements.txt"
-            cp requirements.txt ./images/${{ matrix.image_name }}/
-          fi
-          
-          # List what was copied for verification
-          ls -la ./images/${{ matrix.image_name }}/requirements*.txt
-
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -240,20 +226,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
 
-      - name: Copy appropriate requirements file to image directory
-        run: |
-          # Copy the Python version-specific requirements file
-          if [ -f "requirements-${{ matrix.python_version }}.txt" ]; then
-            echo "Using requirements-${{ matrix.python_version }}.txt for Python ${{ matrix.python_version }}"
-            cat requirements-${{ matrix.python_version }}.txt requirements-common.txt > ./images/${{ matrix.image_name }}/requirements.txt
-          else
-            echo "Python ${{ matrix.python_version }} specific requirements file not found, using default requirements.txt"
-            cp requirements.txt ./images/${{ matrix.image_name }}/
-          fi
-          
-          # List what was copied for verification
-          ls -la ./images/${{ matrix.image_name }}/requirements*.txt
-
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -320,5 +292,3 @@ jobs:
           name: trivy-sarif-${{ matrix.os }}-${{ matrix.version }}
           path: trivy-results.sarif
           retention-days: 30
-
-
