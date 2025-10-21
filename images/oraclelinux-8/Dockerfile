@@ -22,6 +22,12 @@ RUN dnf clean all \
         && dnf clean all \
         && rm -rf /var/cache/dnf /var/log/*
 
+# Install Docker CLI
+RUN dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo \
+    && dnf -y install --nodocs docker-ce-cli \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf /var/log/*
+
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
