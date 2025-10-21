@@ -11,7 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Install system dependencies and Python
 RUN dnf -y update \
     && dnf -y install epel-release \
-    && dnf -y install --nodocs \
+    && dnf -y install --allowerasing --nodocs \
         python3 python3-pip python3-devel \
         systemd sudo \
         openssl-devel libffi-devel \
