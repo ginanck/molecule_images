@@ -16,11 +16,17 @@ RUN dnf clean all \
         systemd sudo \
         openssl-devel libffi-devel \
         openssh-server openssh-clients \
-        git curl wget \
+        git curl wget gpg \
         procps-ng \
         ca-certificates \
         && dnf clean all \
         && rm -rf /var/cache/dnf /var/log/*
+
+# Install Docker CLI
+RUN dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo \
+    && dnf -y install --nodocs docker-ce-cli \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf /var/log/*
 
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
