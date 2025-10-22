@@ -1,4 +1,4 @@
-FROM rockylinux:9
+FROM rockylinux/rockylinux:9.6
 
 LABEL maintainer="Gorkem Korkmaz"
 LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images

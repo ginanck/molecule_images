@@ -1,4 +1,4 @@
-FROM oraclelinux:8
+FROM oraclelinux:8.9
 
 LABEL maintainer="Gorkem Korkmaz"
 LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images

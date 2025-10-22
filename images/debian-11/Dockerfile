@@ -1,4 +1,4 @@
-FROM debian:11
+FROM debian:11.9-slim
 
 LABEL maintainer="Gorkem Korkmaz"
 LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images

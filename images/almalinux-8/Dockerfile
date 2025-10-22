@@ -1,4 +1,4 @@
-FROM almalinux:8
+FROM almalinux:8.10
 
 LABEL maintainer="Gorkem Korkmaz"
 LABEL org.opencontainers.image.source=https://github.com/ginanck/molecule_images
