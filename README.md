@@ -14,40 +14,44 @@ Lightweight Docker images optimized for Ansible Molecule testing with pre-instal
 
 ### Ubuntu Images
 
-| Version | Python | Docker Tags |
-|---------|--------|-------------|
+| Version | Python | Docker Tags             |
+|---------|--------|-------------------------|
 | 24.04   | 3.12   | `24.04-latest`, `24.04` |
 | 22.04   | 3.10   | `22.04-latest`, `22.04` |
 | 20.04   | 3.8    | `20.04-latest`, `20.04` |
 
 ### Debian Images
 
-| Version | Python | Docker Tags |
-|---------|--------|-------------|
+| Version | Python | Docker Tags       |
+|---------|--------|-------------------|
+| 13      | 3.11   | `13-latest`, `13` |
 | 12      | 3.11   | `12-latest`, `12` |
 | 11      | 3.9    | `11-latest`, `11` |
 | 10      | 3.7    | `10-latest`, `10` |
 
 ### AlmaLinux Images
 
-| Version | Python | Docker Tags |
-|---------|--------|-------------|
-| 9       | 3.9    | `9-latest`, `9` |
-| 8       | 3.6    | `8-latest`, `8` |
+| Version  | Python | Docker Tags       |
+|----------|--------|-------------------|
+| 10       | 3.9    | `10-latest`, `10` |
+| 9        | 3.9    | `9-latest`, `9`   |
+| 8        | 3.6    | `8-latest`, `8`   |
 
 ### Rocky Linux Images
 
-| Version | Python | Docker Tags |
-|---------|--------|-------------|
-| 9       | 3.9    | `9-latest`, `9` |
-| 8       | 3.6    | `8-latest`, `8` |
+| Version  | Python | Docker Tags       |
+|----------|--------|-------------------|
+| 10       | 3.9    | `10-latest`, `10` |
+| 9        | 3.9    | `9-latest`, `9`   |
+| 8        | 3.6    | `8-latest`, `8`   |
 
 ### Oracle Linux Images
 
-| Version | Python | Docker Tags |
-|---------|--------|-------------|
-| 9       | 3.9    | `9-latest`, `9` |
-| 8       | 3.6    | `8-latest`, `8` |
+| Version  | Python | Docker Tags       |
+|----------|--------|-------------------|
+| 10       | 3.9    | `10-latest`, `10` |
+| 9        | 3.9    | `9-latest`, `9`   |
+| 8        | 3.6    | `8-latest`, `8`   |
 
 ## Quick Start
 
