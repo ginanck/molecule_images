@@ -12,6 +12,10 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://download.rockylinux.org/pub/rocky|g' /etc/yum.repos.d/Rocky-*.repo \
     && sed -i 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/Rocky-*.repo
 
+# Oracle/Alma/Rocky mirrors occasionally fail DNS resolution on CI runners.
+# Make dnf retry package downloads instead of failing the whole layer.
+RUN printf 'retries=10\ntimeout=60\nminrate=0\n' >> /etc/dnf/dnf.conf
+
 # Install system dependencies and Python
 RUN dnf clean all \
     && dnf -y install epel-release \

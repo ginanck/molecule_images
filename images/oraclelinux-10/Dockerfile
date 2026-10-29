@@ -8,10 +8,15 @@ ENV container=docker
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
+# Oracle/Alma/Rocky mirrors occasionally fail DNS resolution on CI runners.
+# Make dnf retry package downloads instead of failing the whole layer.
+RUN printf 'retries=10\ntimeout=60\nminrate=0\n' >> /etc/dnf/dnf.conf
+
 # Install system dependencies and Python
 RUN dnf clean all \
     && dnf -y install oracle-epel-release-el10 \
     && dnf -y install --allowerasing --nodocs --setopt=install_weak_deps=False \
+        --setopt=retries=10 --setopt=timeout=60 \
         python3 python3-pip \
         systemd sudo \
         openssl-devel libffi-devel \
