@@ -100,6 +100,12 @@ Every image provides, for Molecule to work unchanged across distros:
   Debian 10 ships 3.7, which is below the ansible-core 2.21 target minimum: use the Debian 11+
   images or a legacy runner for Debian 10.
 
+## End-of-life distributions
+
+Debian 10 (Buster) and Debian 11 (Bullseye) are no longer served from the regular Debian
+mirrors. Their Dockerfiles rewrite APT to `archive.debian.org` and disable the release
+validity check, so the images keep building without changing their pinned base tags.
+
 ## Local Development
 
 Build images manually

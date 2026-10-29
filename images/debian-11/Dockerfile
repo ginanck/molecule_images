@@ -14,6 +14,14 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# Debian 11 is past its mirror lifetime: point APT at the archive and tolerate
+# expired Release files, otherwise every package fetch returns 404.
+RUN sed -i -e 's|deb.debian.org/debian-security|archive.debian.org/debian-security|g' \
+              -e 's|security.debian.org/debian-security|archive.debian.org/debian-security|g' \
+              -e 's|deb.debian.org/debian|archive.debian.org/debian|g' /etc/apt/sources.list \
+    && sed -i '/bullseye-updates/d;/bullseye-backports/d' /etc/apt/sources.list \
+    && printf 'Acquire::Check-Valid-Until "false";\n' > /etc/apt/apt.conf.d/99archive
+
 # Install system dependencies and Python
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip \
