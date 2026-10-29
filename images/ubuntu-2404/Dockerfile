@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-server openssh-client \
     git curl wget gpg \
     procps \
+    iproute2 \
     ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

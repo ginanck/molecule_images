@@ -18,6 +18,7 @@ RUN dnf -y update \
         openssh-server openssh-clients \
         git curl wget gpg \
         procps-ng \
+        iproute \
         ca-certificates \
         && dnf clean all \
         && rm -rf /var/cache/dnf /var/log/*

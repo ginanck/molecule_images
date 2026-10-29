@@ -35,7 +35,7 @@ Lightweight Docker images optimized for Ansible Molecule testing with pre-instal
 |----------|--------|-------------------|
 | 10       | 3.9    | `10-latest`, `10` |
 | 9        | 3.9    | `9-latest`, `9`   |
-| 8        | 3.6    | `8-latest`, `8`   |
+| 8        | 3.6 (3.11 installed) | `8-latest`, `8`   |
 
 ### Rocky Linux Images
 
@@ -43,7 +43,7 @@ Lightweight Docker images optimized for Ansible Molecule testing with pre-instal
 |----------|--------|-------------------|
 | 10       | 3.9    | `10-latest`, `10` |
 | 9        | 3.9    | `9-latest`, `9`   |
-| 8        | 3.6    | `8-latest`, `8`   |
+| 8        | 3.6 (3.11 installed) | `8-latest`, `8`   |
 
 ### Oracle Linux Images
 
@@ -51,7 +51,7 @@ Lightweight Docker images optimized for Ansible Molecule testing with pre-instal
 |----------|--------|-------------------|
 | 10       | 3.9    | `10-latest`, `10` |
 | 9        | 3.9    | `9-latest`, `9`   |
-| 8        | 3.6    | `8-latest`, `8`   |
+| 8        | 3.6 (3.11 installed) | `8-latest`, `8`   |
 
 ## Quick Start
 
@@ -80,11 +80,25 @@ Each image includes:
 - **Ansible Ecosystem**: ansible-core, ansible-lint, ansible-compat
 - **Molecule Testing**: molecule, molecule-docker, molecule-podman
 - **Python Tools**: flake8, cryptography, PyYAML
-- **System Tools**: Docker CLI, Git, SSH client, Bash
+- **System Tools**: Docker CLI, Git, SSH client, Bash, `iproute` (Ansible network facts)
 - **Build Tools**: GCC, musl-dev, libffi-dev (for package compilation)
 - **Collections**: Pre-installed community.docker collection
 - **User Setup**: Dedicated `ansible` user (UID 1000) with proper permissions
 - **Multi-Architecture Support**: Images are built for both AMD64 and ARM64 architectures
+
+## Image contract
+
+Every image provides, for Molecule to work unchanged across distros:
+
+- systemd as PID 1, with the usual container masks, so `systemd`-managed roles can be tested.
+- `sshd` enabled and an `ansible` user (UID 1000, sudo without password).
+- `iproute`/`iproute2`, so Ansible gathers `ansible_default_ipv4`, `ansible_interfaces` and the
+  other network facts.
+- A Python interpreter that ansible-core 2.17+ can manage. Rocky 8, AlmaLinux 8 and Oracle Linux 8
+  ship 3.6 by default; those images also install Python 3.11 and set
+  `ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3.11`, leaving the system interpreter untouched.
+  Debian 10 ships 3.7, which is below the ansible-core 2.21 target minimum: use the Debian 11+
+  images or a legacy runner for Debian 10.
 
 ## Local Development
 

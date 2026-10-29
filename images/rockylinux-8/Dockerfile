@@ -17,14 +17,20 @@ RUN dnf clean all \
     && dnf -y install epel-release \
     && dnf -y install --allowerasing --nodocs \
         python3 python3-pip \
+        python3.11 \
         systemd sudo \
         openssl-devel libffi-devel \
         openssh-server openssh-clients \
         git curl wget gpg \
         procps-ng \
+        iproute \
         ca-certificates \
         && dnf clean all \
         && rm -rf /var/cache/dnf /var/log/*
+
+# EL8 ships Python 3.6, which ansible-core 2.17+ cannot manage.
+# Install 3.11 and point Ansible at it; the system Python stays untouched.
+ENV ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3.11
 
 # Create symlink for python command
 RUN ln -sf /usr/bin/python3 /usr/bin/python
